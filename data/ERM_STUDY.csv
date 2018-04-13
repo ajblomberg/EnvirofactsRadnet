@@ -1,0 +1,11 @@
+STUDY_NUM,STUDY_ID,STUDY_NAME
+1,PMN,RadNet Pasteurized Milk Network
+2,RAN,RadNet Radiation Alert Network
+3,TR,RadNet Precipitation Network
+4,DW,RadNet Drinking Water Network
+5,SW,ERAMS Surface Water Network
+24,KR,ERAMS Kr-85 in Air
+25,TR - RAIN,RadNet TR - Individual rain samples
+26,RAN - PUUA,RadNet RAN - Annual composites
+27,DWCP,RadNet DW - Annual composites
+30,FNI,Fukushima Nuclear Incident

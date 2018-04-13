@@ -1,0 +1,173 @@
+ANA_PROC_NUM,ANA_PROC_ID,PROC_TYPE_ID,ANA_PROC_NAME
+1,AIRBETA,AIRBETA,Gross beta in air
+2,ALPBET,ALPBET,Gross alpha-beta
+3,ALPHA,ALPHA,Gross alpha
+4,ALPHACO,ALPHA,Gross alpha
+5,AM,AM,Americium
+6,BETA,BETA,Gross beta
+7,C14,C14,Carbon-14
+8,FIELDEST,FIELDEST,Field Radiation Screening
+9,GAMMA,GAMMA,Gamma spectroscopy
+10,H3,H3,Tritium
+11,I131,I131,Iodine-131
+12,KR85,KR85,Krypton-85
+13,PB210,PB210,Lead-210
+14,PO210,PO210,Polonium-210
+15,POPB,POPB,Lead-210 and polonium-210
+16,PU-ISOTOPIC,PU,Plutonium
+17,RA226,RA226,Radium-226
+18,RA228,RA228,Radium-228
+19,RN222,RN222,Radon-222
+20,SR-89/90,SR,Strontium
+21,TH-ISOTOPIC,TH,Thorium
+22,U-ISOTOPIC,U,Uranium
+23,EERF AM-01,AM,Americium in Ashed Samples
+24,EPA 901.1,GAMMA,Gamma Spectroscopy
+25,EERF H-01,H3,Tritium by Azeotropic Method
+26,EERF H-02,H3,Tritium in Water Samples by Dioxane Method
+27,EERF H-03,H3,Tritium in Water Samples by Emulsion Method
+28,EERF I-01,I131,Iodine-131 in Drinking Water Samples
+29,EERF I-02,I131,Iodine-131 in Milk Samples
+30,EERF I-03,I131,Low-level Iodine-131 in Milk Samples
+31,EERF PB-01,PB210,Lead-210 in Water and Solid Samples
+32,EERF PU-01,PU,Plutonium in Ashed Samples
+33,EERF RA-04,RA226,Radium-226 by Deemanation
+34,EERF RA-05,RA228,Radium-228 in Water Samples
+35,EERF SR-01,SR,Radiostrontium in Food Ash and Other Solid Samples
+36,EERF SR-02,SR,Radiostrontium in Milk
+37,EERF SR-03,SR,Strontium-90 in Urine
+38,EERF SR-04,SR,"Radiostrontium in Water, Sea Water, and Other Aqueous Media"
+39,EERF 00-01,ALPHA,Gross Alpha and Beta in Water
+40,EERF 00-02,ALPHA,Gross Alpha in Water Samples by Coprecipitation
+41,EERF 00-03,POPB,Lead-210 and Polonium-210 in Dry Samples
+42,EERF 00-04-PU,PU,Plutonium in Air Filters
+43,EERF 00-04-TH,TH,Thorium in Air Filters
+44,EERF 00-04-U,U,Uranium in Air Filters
+45,EERF 00-05-TH,TH,Thorium by Fusion Method
+46,EERF 00-05-U,U,Uranium by Fusion Method
+47,EERF 00-06-TH,TH,Thorium in Ashed Samples
+48,EERF 00-06-U,U,Uranium in Ashed Samples
+49,EERF 00-07-TH,TH,Thorium in Water Samples
+50,EERF 00-07-U,U,Uranium in Water Samples
+51,EERF 00-08,POPB,Lead-210 and Polonium-210 in Coal and Oil Samples
+52,EERF 00-09-PU,PU,Plutonium in Milk
+53,EERF 00-09-U,U,Uranium in Milk
+54,RA,NA,RA
+55,P32,NA,P32
+56,KNOWN,NA,KNOWN
+57,CA,NA,CA
+58,CS,NA,CS
+59,K,NA,K
+60,CE,NA,CE
+61,U-AUTO,U,U-AUTO
+62,FE,NA,FE
+63,PU-AUTO,PU,PU-AUTO
+64,NA,NA,NA
+65,AM-AUTO,AM,AM-AUTO
+66,PO-AUTO,PO210,PO-AUTO
+67,TC99,TC99,TC99
+68,NI63,NA,NI63
+69,CD,NA,CD
+70,HG,NA,HG
+71,AS,NA,AS
+72,SB,NA,SB
+73,ZN,NA,ZN
+74,AA,METALS,Metals by GFAA or FLAA
+75,VOA,VOA,VOA
+76,BA,NA,BA
+77,CR,NA,CR
+78,PCB,PCB,PCB
+79,SE,NA,SE
+80,MN,NA,MN
+81,AG,NA,AG
+82,PEST,PEST,Pesticides
+83,TL,NA,TL
+84,NI,NA,NI
+85,V,NA,V
+86,CO,NA,CO
+87,BE,NA,BE
+88,AL,NA,AL
+89,CU,NA,CU
+90,MG,NA,MG
+91,PB,NA,NA
+92,SW846-6020,METALS,Metals by ICP-MS
+93,GFAA,METALS,Metals by GFAA
+94,FLAA,METALS,Metals by FLAA
+95,SW846-7041,SB,Antimony (GFAA)
+96,SW846-7060A,AS,Arsenic (GFAA)
+97,SW846-7080A,BA,Barium (FLAA)
+98,SW846-7091,BE,Beryllium (GFAA)
+99,SW846-7131A,CD,Cadmium (GFAA)
+100,SW846-7190,CR,Chromium (FLAA)
+101,SW846-7380,FE,Iron (FLAA)
+102,SW846-7421,PB,Lead (GFAA)
+103,SW846-7460,MN,Manganese (FLAA)
+104,SW846-7470A,HG,Mercury in Liquid Waste (FIAS)
+105,SW846-7471A,HG,Mercury in Solid or Semisolid Waste (FIAS)
+106,SW846-7740,SE,Selenium (GFAA)
+107,SW846-7761,AG,Silver (GFAA)
+108,SW846-7770,NA,Sodium (FLAA)
+109,SW846-7841,TL,Thallium (GFAA)
+110,SW846-7950,ZN,Zinc (FLAA)
+112,URANIUM,U,Uranium by ICP/MS
+113,RA224BYAS,RA224,Radium-224 by Alpha Spectroscopy
+114,RA224BYGS,RA224,Radium-224 by Gamma Spectroscopy
+115,SW846-8270,SVOA,Semi-volatile organic analysis
+116,SW846-8260,VOA,Volatile Organic Analysis
+117,NAREL AM-01,AM,Americium-241 in Environmental Matrices
+118,NAREL GAM-01,GAMMA,Gamma-ray Spectrometry
+119,NAREL GR-01,ALPBET,Gross Alpha and Beta on Water Samples
+120,NAREL GR-03,ALPBET,Gross Alpha and Beta on Solid Samples
+121,NAREL H-01,H3,Tritium in Environmental Matrices
+122,NAREL H-02,H3,Tritium in Water
+123,NAREL H-04,H3,Tritium in Silica Gel
+124,NAREL I-01,I131,Iodine-131 in Water
+125,NAREL PU-01,PU,Plutonium-238 and 239 in Environmental Matrices
+126,NAREL PU-02,PU,"Plutonium-238 and 239 by Leaching, Soil and Sediment"
+127,NAREL RA-04,RA226,Radium-226 in Environmental Matrices
+128,NAREL RA-05,RA228,Radium-228 in Environmental Matrices
+129,NAREL SR-02,SR,Strontium-89 and 90 in Milk
+130,NAREL SR-04,SR,Strontium-89 and 90 in Environmental Matrices
+131,NAREL U-01,U,Isotopic Uranium (and Thorium) in Environmental Matrices
+132,NAREL TH-01,TH,Isotopic (Uranium and) Thorium in Environmental Matrices
+133,NAREL U-EICHROM,U,Actinides (Uranium) by Extraction Chromatography
+134,NAREL SR-EICHROM,SR,Strontium by Eichrom
+135,NAREL AM-EICHROM,AM,Actinides (Americium-241) by Extraction Chromatography
+136,NAREL PU-EICHROM,PU,Actinides (Plutonium) by Extraction Chromatography
+137,NAREL TH-EICHROM,TH,Actinides (Thorium) by Extraction Chromatography
+138,RIENL RQA-606-PU,PU,Plutonium in Environmental Samples by Alpha Spectroscopy
+139,RIENL RQA-606-TH,TH,Thorium in Environmental Samples by Alpha Spectroscopy
+140,RIENL RQA-606-U,U,Uranium in Environmental Samples by Alpha Spectroscopy
+141,TC99-EICHROM,TC99,Technetium-99 by Eichrom
+142,SR-CERENKOV,SR,"Strontium 89/90 by Eichrom, Cerenkov counting option"
+143,NAREL GR/SWIPE,ALPBET,Gross Alpha and Beta on Swipes
+144,NAREL NP-EICHROM,NP,Actinides (Neptunium) by Extraction Chromatography
+145,SW846-8081,PEST,NA
+146,SW846-8082,PCB,NA
+147,NAREL RA226-EICHROM,RA226,Radium-226 in Water: Rapid Method for High-Activity Samples
+148,RA225,RA225,Radium-225 Tracer Standardization for Eichrom Ra-226 Method
+149,U232,U232,Uranium-232 Tracer Confirmation
+150,AM-EXPERIMENTAL,AM,Americium - Experimental
+151,PU-EXPERIMENTAL,PU,Plutonium - Experimental
+152,RA226-EXPERIMENTAL,RA226,Radium-226 - Experimental
+153,TH-EXPERIMENTAL,TH,Thorium - Experimental
+154,U-EXPERIMENTAL,U,Uranium - Experimental
+155,NAREL GR-01-SCREEN,ALPBET,Gross Alpha and Beta on Water Samples - Screening
+156,NAREL GR-03-SCREEN,ALPBET,Gross Alpha and Beta on Solid Samples - Screening
+157,NAREL GAM-01-RA,GAMMA,Gamma-ray Spectrometry - Sealed Radium Cans
+158,RA228-EXPERIMENTAL,RA228,Radium-228 - Experimental
+159,SR-EXPERIMENTAL,SR,Strontium-Experimental
+160,NAREL GR/FILTER,ALPBET,Gross Alpha and Beta on Filters
+161,CF-EXPERIMENTAL,CF,Californium - Experimental
+162,CM-EXPERIMENTAL,CM,Curium - Experimental
+163,NAREL ACT-02F-AM,AM,Americium-241 Using NaOH Fusion
+164,NAREL ACT-02F-PU,PU,Isotopic Plutonium Using NaOH Fusion
+165,NAREL ACT-02F-TH,TH,Isotopic Thorium Using NaOH Fusion
+166,NAREL ACT-02F-U,U,Isotopic Uranium Using NaOH Fusion
+167,NAREL H-05,H3,Tritium in Dissolvable Wipes
+168,SR-EXPERIMENTAL-YF3,SR,Strontium-Experimental with YF3
+169,NAREL SR-05-EC-ISO,SR,Sr in Environmental Matrices Using Extraction Chromatography
+170,NAREL SR-05-EC-TOTAL,SR,Total Sr in Env. Matrices Using Extraction Chromatography
+171,NAREL-HF-01-RA,GAMMA,Rapid Method for Gamma Analysis of FPWHFO-Radium
+172,NAREL-HF-01-PTU,GAMMA,"Rapid Method for Gamma Analysis of FPWHFO (Pb,Th,U)"
+173,NAREL CM-01,CM,Curium-244/243 in Water
