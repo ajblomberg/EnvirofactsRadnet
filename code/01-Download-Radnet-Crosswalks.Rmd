@@ -1,0 +1,207 @@
+---
+title: "Initial RadNet Envirofacts Download"
+author: "Annelise Blomberg"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+      html_document:
+        keep_md: true
+        toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(httr)
+```
+
+# Introduction 
+
+We are working on downloading RadNET data from the Envirofacts API (instead of downloading by hand). The EPA has a REST API for interacting with Envirofacts: 
+https://www.epa.gov/enviro/envirofacts-data-service-api
+
+I access the data using the package "httr"
+
+There are 11 RadNET tables available from Envirofacts. The following figure is from the EPA website (https://www.epa.gov/enviro/radnet-model), and shows how all the tables connect to each other. 
+
+![RadNet Model](RADNET-model.png)
+
+This markdown file is a quick review of what information is available in each table. 
+
+# Download Table Lengths
+
+We start by making a list of all files and downloading the total counts of entries for each one.  
+```{r table lengths}
+table.list <- as.list(c("ERM_ANALYTE", "ERM_RESULT", "ERM_ANALYSIS", "ERM_COUNT", "ERM_DET_TYPE", "ERM_ANA_PROC", "ERM_SAMPLE", "ERM_MATRIX", "ERM_LOCATION", "ERM_PROJECT", "ERM_STUDY")) 
+
+GetTableLength <- function(table) {
+        url <- "http://iaspub.epa.gov/enviro/efservice" 
+        url2 <- paste(url, table, "JSON", "count", sep = "/")
+        results <- GET(url2)
+        TableLength <- flatten(content(results))[[1]]
+}
+
+# test <- GetTableLength("ERM_ANA_PROC")
+
+table.lengths <- map(table.list, GetTableLength)
+names(table.lengths) <- table.list
+table.lengths2 <- t(bind_rows(table.lengths))
+table.lengths3 <- as.tibble(table.lengths2, rownames = "Table") %>% 
+        rename(Length = V1) %>% 
+        arrange(Length)
+
+library(kableExtra)
+knitr::kable(table.lengths3, "html") %>% 
+        kable_styling(full_width = F, position = 'left')
+```
+
+# Download (7) smaller tables 
+
+From the table lengths, we see that some of the tables are smaller, so must be crosswalks/metadata of a sort rather than sample information. We download these smaller tables. 
+```{r crosswalk tables, warning = FALSE, message = FALSE}
+small.table.list <- as.list(c("ERM_ANALYTE", "ERM_DET_TYPE", "ERM_ANA_PROC", "ERM_MATRIX", "ERM_LOCATION", "ERM_STUDY", "ERM_PROJECT"))
+
+GetTableContent <- function(table){
+        url <- "http://iaspub.epa.gov/enviro/efservice" 
+        url2 <- paste(url, table, "CSV", sep = "/")
+        results <- GET(url2)
+        results.content <- content(results)
+        
+        # Rename table column names to drop the table prefix
+        names.long <- names(results.content)
+        names.short <- str_sub(names.long, start = str_length(table) + 2)
+        names(results.content) <- names.short
+        
+        return(results.content)
+}
+
+table.content <- map(small.table.list, GetTableContent)
+names(table.content) <- small.table.list
+```
+
+It looks like every table is loading an empty last-column. Is this the case? 
+
+```{r check last column}
+CheckLastCol <- function(table){
+        last.col <- dim(table)[2]
+        unique(table[last.col])
+}
+test_lastcol <- map(table.content, CheckLastCol) 
+# Print out first three
+test_lastcol[1:3]
+```
+
+We see that the last column is empty for all tables, so we drop it. 
+
+```{r}
+DropLastCol <- function(table){
+        last.col <- dim(table)[2]
+        table2 <- table[, -last.col]
+}
+
+table.content2 <- map(table.content, DropLastCol)
+```
+
+Save the tables into the global environment. 
+
+```{r save tables}
+list2env(table.content2, envir=.GlobalEnv)
+```
+
+## Look at individual tables 
+
+We have seven tables with crosswalk information. 
+
+ERM_ANALYTE: gives ANALYTE_ID and ANALYTE_NAME for all 65 analyte types. 
+
+```{r ERM_ANALYTE, echo = F}
+library(knitr)
+library(kableExtra)
+
+kable(head(ERM_ANALYTE), "html") %>% 
+        kable_styling(full_width = F, position = "left")
+
+```
+
+ERM_DET_TYPE: I have no idea what this is.
+
+```{r ERM_DET, echo = F}
+kable(head(ERM_DET_TYPE), "html")%>% 
+        kable_styling(full_width = F, position = "left")
+```
+
+ERM_ANA_PROC: this gives a procedure name and procedure ID>. Each procedure is connected to an analysis. 
+
+```{r ANA PROC, echo = F}
+
+kable(head(ERM_ANA_PROC), "html") %>% 
+        kable_styling(full_width = F, position = "left")
+```
+
+ERM_MATRIX: this is the matrix from which the sample was collected. There are only six matrix types (including air filters) 
+
+```{r matrix, echo = F}
+kable(head(ERM_MATRIX), "html") %>% 
+        kable_styling(full_width = F, position = "left")
+```
+
+There are 331 ERM_LOCATIONs and 1094 ERM_PROJECTs. Some locations have multiple projects. 
+
+```{r summarize all tables, echo = F}
+
+kable(head(ERM_LOCATION), "html") %>% 
+        kable_styling(full_width = F, position = "left")
+
+kable(head(ERM_PROJECT), "html") %>% 
+        kable_styling(full_width = F, position = "left")
+
+
+```
+
+There 10 ERM_STUDYs. 
+
+```{r ERM STUDY, echo = F}
+kable(ERM_STUDY, "html") %>% 
+        kable_styling(full_width = F, position = "left")
+```
+
+
+```{r save metadata files}
+
+SaveFiles <- function(table, table.name){
+        save.name <- paste0(table.name, ".csv")
+        print(save.name)
+        write_csv(table, path = here::here("data", save.name))
+}
+
+walk2(.x = table.content2, .y = names(table.content2), SaveFiles)
+```
+
+# Investigate (4) bigger tables
+
+The largest tables in RadNet Envirofacts are: 
+
+* ERM_RESULT   (`r table.lengths3[table.lengths3[1] == "ERM_RESULT", ][2]`)  
+* ERM_ANALYSIS (`r table.lengths3[table.lengths3[1] == "ERM_ANALYSIS", ][2]`)  
+* ERM_COUNT    (`r table.lengths3[table.lengths3[1] == "ERM_COUNT", ][2]`)
+* ERM_SAMPLE   (`r table.lengths3[table.lengths3[1] == "ERM_SAMPLE", ][2]`)
+
+From this, we can see that every sample has at least one analysis, and every analysis has at least one result. 
+
+From the metadata available online, we can see what is in each table without downloading. 
+
+* ERM_RESULT    
+    + ANALYTE_ID, ANA_NUM, CSU, MDC  
+    + RESULT_AMOUNT, RESULT_DATE, RESULT_ID, RESULT_UNIT
+
+
+* ERM_ANALYSIS  
+    + ANA_COMMENT, ANA_NUM, ANA_PROC_NUM, ANA_SIZE, ANA_UNIT, SAMP_NUM
+
+
+* ERM_SAMPLE  
+    + CLIENT_ID, COLLECT_END, COLLECT_START, LOC_NUM, MAT_ID, PROJ_NUM
+    + SAMP_COMMENT, SAMP_DESC, SAMP_ID, SAMP_NUM, SAMP_SIZE, SAMP_UNIT
+
+
+It looks like most of this will be important. 
