@@ -2,7 +2,9 @@
 #' title: "Process Beta data from Envirofacts (step 3)"
 #' author: "Annelise Blomberg"
 #' date: '`r format(Sys.Date(), "%B %d, %Y")`'
-#' output: html_document
+#' output:
+#'    html_document:
+#'      toc: true
 #' ---
 
 #' ## Introduction 
@@ -97,7 +99,7 @@ beta <- beta %>%
 #' We make a list of all final columns for future reference. 
 #'  
 
-#+ Summarize final variables 
+#+ Summarize-final-variables 
 unique.cols <- as.tibble(t(beta %>% summarise_all(funs(n_distinct(.)))), rownames = "variable") %>% 
         rename(unique_count = V1) 
 
@@ -125,6 +127,7 @@ summary(beta)
 #'  
 #' We can use loc_num or city_name-station as unique identifiers. 
 
+#+ unique-location-identifiers
 location.list <- beta %>% group_by(city_state, station, loc_num) %>% count() %>% rename(n.obs = n)
 
 # Cities with multiple monitors 
@@ -149,6 +152,7 @@ beta %>% select(city_state, station) %>%
 #' First we confirm that "ANA_NUM" is a unique identifier. Then we sequence along from start date to end date for each sample (ANA_NUM).
 #' We are using data.table because it is by far the fastest option.
 
+#+ create-alldates, cache = T
 dim(beta)
 length(unique(beta$ana_num))
 
@@ -163,6 +167,7 @@ beta.alldates2 <- left_join(beta.alldates, beta, by = "ana_num")
 #' Yes. Some cities have more duplicate dates than others. This is because the end-date of one sample matches the start-date of the next sample.
 #' In other cases, we have multiple measures for the same day. 
 
+#+ dq1-alldates
 dq1 <- beta.alldates2 %>%
         ungroup() %>%
         group_by(city_state, station, date) %>%
@@ -181,6 +186,7 @@ head(beta %>% filter(city_state == "OAK RIDGE,TN") %>%
 #' When there are days with duplicates, we take the mean of the two measures.
 #' We drop ana_num, collect_start and collect_end because all of these are unique to entries with duplicates. 
 
+#+ eliminate-duplicate-dates
 beta.alldates3 <- beta.alldates2 %>%
         group_by(city_state, city_name, state, station, loc_num, 
                  analyte_id, mat_id, analyte_name, ana_proc_id, result_unit, date) %>% 
@@ -201,7 +207,7 @@ dim(beta.alldates3)
 #' 
 #' In the final dataset, for cities with >1 monitor, we take the mean by day. 
 #' 
-#+ identify duplicate cities
+#+ identify-duplicate-cities
 dup.cities <- location.list %>% group_by(city_state) %>% count() %>% filter(n > 1) %>% select(-n) %>% 
         inner_join(location.list, dup.cities, by = "city_state") %>%
         arrange(city_state) %>% 
@@ -218,7 +224,7 @@ dup.cities2 <- dup.cities %>%
 #' We pull in daily data for these cities. 
 #' We add an extra column labeling the location numbers as A, B, C etc. for conveninece. 
 
-#+ Add location letters
+#+ Add-location-letters
 RenameLocation <- function(df){
         n.unique <- length(unique(df$loc_num))
         loc_num_list <- unique(df$loc_num)
@@ -236,7 +242,7 @@ dup.city.data <- split(dup.city.data, dup.city.data$city_state) %>%
 
 #' We plot the series for all cities with multiple monitors. 
 
-#+ plot duplicate cities, fig.width = 10, fig.height = 10 
+#+ plot-duplicate-cities, fig.width = 10, fig.height = 10 
 plot.dups <- dup.city.data %>%
         filter(date > "1996-01-01") %>%
         ggplot(aes(x = date, y = result_amount, color = as.factor(loc_letter))) +
@@ -248,9 +254,10 @@ plot.dups
 ggsave("duplicate-beta-monitors.jpg", plot = plot.dups, device = "jpeg", path = here("figures"), width = 10, height = 12)
 
 #' We also plot and save the monitors for all individual cities
-#+ plot duplicate cities2
+#+ plot-duplicate-cities2, warning = FALSE, fig.keep = "none"
 
 PlotCityMonitors <- function(df, name.df) {
+        plot.new()
         plot <- df %>% 
                 ggplot(aes(x = date, y = result_amount)) +
                 geom_point() +
@@ -268,7 +275,7 @@ walk2(city.list, names(city.list), PlotCityMonitors)
 #' It looks like the cities with multiple monitors are generally in agreement. How do we decide what to keep and what to drop?
 #' Maybe we check the correlations
 
-#+ Check correlations, fig.width = 8, fig.height = 12
+#+ check-correlations, fig.width = 8, fig.height = 12
 cor <- dup.city.data %>% 
         select(city_state, date, result_amount, loc_letter) %>% 
         spread(key = loc_letter, value = result_amount) 
@@ -298,7 +305,7 @@ cor2 <- map2(cor1, names(cor1), PlotCor)
 #' * Phoenix: drop monitor 4087 
 #' * Montgomery, AL: Keep early dates for monitor 1; middle dates for monitor 3992; final dates for monitor 3997
 
-
+#+ drop-dup-locations
 beta.alldates.no.montgomery <- beta.alldates3 %>% 
         filter(!(city_state == "LAS VEGAS,NV" & loc_num == "43" & date > "2005-01-13")) %>% 
         filter(!(city_state == "PHOENIX,AZ" & loc_num == "4087")) %>% 
@@ -323,6 +330,7 @@ beta.alldates4 <- bind_rows(beta.alldates.no.montgomery, beta.alldates.montgomer
 #' ## Save File
 #' We do some basic DQ checks and then we save. 
 
+#+ save-final-file
 beta.alldates4 %>% group_by(city_state, date) %>% count() %>% arrange(desc(n))
 write_csv(beta.alldates4, path = here("data", "Clean-RadNet-Beta.csv"))
 
