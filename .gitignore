@@ -1,6 +1,8 @@
-
-*.png
 docs/
+figures/
+data/
+*.html
+
 
 # History files
 .Rhistory
