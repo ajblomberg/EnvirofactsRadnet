@@ -1,7 +1,7 @@
 ---
 title: "Download Envirofacts RadNet: step 2"
 author: "Annelise Blomberg"
-date: 'April 13, 2018'
+date: 'April 18, 2018'
 output:
       html_document:
         keep_md: true
@@ -174,17 +174,17 @@ erm.result <- map(erm.result.urls, possibly(DownloadData, NA, quiet = FALSE))
 ## [1] 200
 ## [1] 200
 ## [1] 200
+## [1] 200
+## [1] 200
+## [1] 200
+## [1] 200
+## [1] 200
+## [1] 200
+## [1] 200
+## [1] 200
+## [1] 200
+## [1] 200
 ## [1] 404
-## [1] 200
-## [1] 200
-## [1] 200
-## [1] 200
-## [1] 200
-## [1] 200
-## [1] 200
-## [1] 200
-## [1] 200
-## [1] 200
 ## [1] 200
 ## [1] 200
 ## [1] 200
@@ -323,7 +323,11 @@ We know that we are only interested in information collected from air, so we lim
 ```r
 merged <- merged %>% 
         filter(MAT_ID %in% c("AIR-CHARCOAL", "AIR-FILTER")) %>% 
-        select(-SAMP_COMMENT, - ANA_COMMENT, -SURFACE_WATER_SOURCE)
+        select(-SAMP_COMMENT, - ANA_COMMENT, -SURFACE_WATER_SOURCE) %>% 
+        mutate(COLLECT_START = as.Date(COLLECT_START, format = "%d-%b-%y"), 
+               COLLECT_END = as.Date(COLLECT_END, format = "%d-%b-%y"))
+
+colnames(merged) <- stringr::str_to_lower(colnames(merged))
 
 write_csv(merged, here::here("data", "RadNet-Air-Envirofacts.csv"))
 ```
