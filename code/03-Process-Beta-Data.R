@@ -15,7 +15,7 @@
 library(tidyverse)
 library(here)
 
-data <- read_csv(here("data", "RadNet-Air-Envirofacts.csv"), col_types = cols(
+data <- read_csv(here("data", "Clean-RadNet-Air-Envirofacts.csv"), col_types = cols(
         .default = col_character(),
         result_id = col_integer(),
         result_amount = col_double(),
