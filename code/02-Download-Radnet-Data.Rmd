@@ -1,11 +1,11 @@
 ---
-title: "Download Envirofacts RadNet: step 2"
+title: "Download Envirofacts RadNet data"
 author: "Annelise Blomberg"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 output:
       html_document:
-        keep_md: true
         toc: true
+        toc_float: true
 ---
 
 ```{r setup, include=FALSE}

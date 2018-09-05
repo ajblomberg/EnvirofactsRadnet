@@ -144,7 +144,7 @@ ANA_PROC_NUM,ANA_PROC_ID,PROC_TYPE_ID,ANA_PROC_NAME
 144,NAREL NP-EICHROM,NP,Actinides (Neptunium) by Extraction Chromatography
 145,SW846-8081,PEST,NA
 146,SW846-8082,PCB,NA
-147,NAREL RA226-EICHROM,RA226,Radium-226 in Water: Rapid Method for High-Activity Samples
+147,NAREL RA226-EICHROM,RA226,Radium-226 Analysis by Extraction Chromatography
 148,RA225,RA225,Radium-225 Tracer Standardization for Eichrom Ra-226 Method
 149,U232,U232,Uranium-232 Tracer Confirmation
 150,AM-EXPERIMENTAL,AM,Americium - Experimental
@@ -171,3 +171,4 @@ ANA_PROC_NUM,ANA_PROC_ID,PROC_TYPE_ID,ANA_PROC_NAME
 171,NAREL-HF-01-RA,GAMMA,Rapid Method for Gamma Analysis of FPWHFO-Radium
 172,NAREL-HF-01-PTU,GAMMA,"Rapid Method for Gamma Analysis of FPWHFO (Pb,Th,U)"
 173,NAREL CM-01,CM,Curium-244/243 in Water
+174,NAREL RA-07-EC,RA226,Radium-226 Analysis of Liquid and Solid Matrices

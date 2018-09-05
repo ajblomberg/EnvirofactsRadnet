@@ -1,10 +1,11 @@
 #' ---
-#' title: "Process Beta data from Envirofacts (step 3)"
+#' title: "Process Beta data from Envirofacts"
 #' author: "Annelise Blomberg"
 #' date: '`r format(Sys.Date(), "%B %d, %Y")`'
 #' output:
 #'    html_document:
 #'      toc: true
+#'      toc_float: true
 #' ---
 
 #' ## Introduction 
@@ -12,11 +13,11 @@
 #' This data has been downloaded and saved as "RadNet-Air-Envirofacts.csv"
 #' Our next step is to process Beta data. 
 
-#' ## Load Data 
-
+#+ load-packages, message = F
 library(tidyverse)
 library(here)
 
+#+ load-data, message = F
 data <- read_csv(here("data", "Clean-RadNet-Air-Envirofacts.csv"), col_types = cols(
         .default = col_character(),
         result_id = col_integer(),
@@ -39,15 +40,22 @@ data <- read_csv(here("data", "Clean-RadNet-Air-Envirofacts.csv"), col_types = c
         half_life = col_double(),
         mat_num = col_integer(),
         study_num = col_integer(),
-        mdc = col_double()
+        mdc = col_double(),
+        result_date = col_date(format = "%d-%b-%y")
 ))
 
-analyte.ids <- data %>% select(analyte_id, analyte_name) %>% unique()
-analyte.freq <- table(data$analyte_id)
 
+#' We look at the type of data available and the amount. 
+#+ analyte-type
+(analyte.ids <- data %>% select(analyte_id, analyte_name) %>% unique())
+(analyte.freq <- table(data$analyte_id))
+
+#' We select just analyte ids equal to beta. 
+#+ select-beta
 beta <- data %>% filter(analyte_id == "BETA") 
 
-#` We drop non-detectable results, which make up `r round(100*table(beta$detectable)[[1]]/dim(beta)[[1]], 3)` % of total entries. 
+#' We drop non-detectable results, which make up `r round(100*table(beta$detectable)[[1]]/dim(beta)[[1]], 3)` % of total entries. 
+#+ drop-nondetect
 table(beta$detectable)
 
 beta <- beta %>% filter(detectable == "Y")
@@ -60,9 +68,10 @@ beta <- beta %>% filter(detectable == "Y")
 #' * Columns on the analysis and the sampling.
 #' * All results in SI units 
 #' * Project details (proj_name, proj_num, proj_id all walk 1-1-1 and do not have useful information)  
-#' * Result date, which is after the sample is collected
+#' * Result date, which is after the sample is collected (OR MAYBE WE WANT TO KEEP THIS BECAUSE IT COULD INFLUENCE BETA VALUES???)
 #' * Client ID, Event ID and study number - no useful information
 
+#+ drop-columns1
 # Examples for columns we are dropping 
 beta %>% select(proj_num, proj_id, proj_name) %>% unique()
 head(unique(beta$proj_name))
@@ -76,17 +85,19 @@ beta <- beta %>%
         select(-samp_size, -samp_unit, -samp_desc, -samp_num, -samp_id, -no_of_hours) %>% 
         select(-result_in_si, -csu_in_si, -mdc_in_si, -si_unit) %>% 
         select(-proj_name, -proj_num, -proj_id) %>% 
-        select(-result_date, -client_id, -event_id, -study_num)
+        select(-client_id, -event_id, -study_num) #-result_date
 
 #' We drop additional columns that it we do not need: 
 #' 
 #' * result_id, ana_type, proc_type_id, mat_num, mat_desc, detectable  
-#'   
+#' 
+#' These columns only have one value each, and it is not useful. 
+
+#+ drop-columns2
 drop <- c("result_id", "ana_type", "proc_type_id", "mat_num", "mat_desc", "detectable", "half_life", "half_life_time_unit", "crs_id")
 unique(beta[drop])
 
 beta <- beta[!(names(beta) %in% drop)]
-
 
 
 #' We add a city_state column and rename the state column. We also drop non-continental states.  
@@ -97,7 +108,6 @@ beta <- beta %>%
         filter(!(state %in% c("HI", "AK", "GU", "CNMI", "PR", "ON")))
 
 #' We make a list of all final columns for future reference. 
-#'  
 
 #+ Summarize-final-variables 
 unique.cols <- as.tibble(t(beta %>% summarise_all(funs(n_distinct(.)))), rownames = "variable") %>% 
@@ -146,67 +156,11 @@ beta %>% select(city_state, station) %>%
         filter(n > 1) %>% 
         arrange(desc(n))
 
-
-#' ## Create all beta dates
-#' We assign the beta measurement to all days that it was measured over (e.g., from collect_start to collect_end).
-#' First we confirm that "ANA_NUM" is a unique identifier. Then we sequence along from start date to end date for each sample (ANA_NUM).
-#' We are using data.table because it is by far the fastest option.
-
-#+ create-alldates, cache = T
-dim(beta)
-length(unique(beta$ana_num))
-
-library(data.table)
-beta.alldates <- setDT(beta)[ , list(ana_num = ana_num, date = seq.Date(collect_start, collect_end, by = 1)), by = 1:nrow(beta)]
-beta.alldates <- as.tibble(beta.alldates[ , c("ana_num", "date")])
-
-#' We join the rest of the beta, drop unnecessary columns, and create a city_state column.
-beta.alldates2 <- left_join(beta.alldates, beta, by = "ana_num")
-
-#' Are there any duplicate beta entries when we do this?
-#' Yes. Some cities have more duplicate dates than others. This is because the end-date of one sample matches the start-date of the next sample.
-#' In other cases, we have multiple measures for the same day. 
-
-#+ dq1-alldates
-dq1 <- beta.alldates2 %>%
-        ungroup() %>%
-        group_by(city_state, station, date) %>%
-        count() %>%
-        filter(n > 1)
-dq2 <- dq1 %>% 
-        select(-n) %>%
-        ungroup() %>%
-        group_by(city_state) %>%
-        count() %>%
-        arrange(desc(n))
-
-head(beta %>% filter(city_state == "OAK RIDGE,TN") %>%
-        select(city_state, loc_num, collect_start, collect_end, result_amount))
-
-#' When there are days with duplicates, we take the mean of the two measures.
-#' We drop ana_num, collect_start and collect_end because all of these are unique to entries with duplicates. 
-
-#+ eliminate-duplicate-dates
-beta.alldates3 <- beta.alldates2 %>%
-        group_by(city_state, city_name, state, station, loc_num, 
-                 analyte_id, mat_id, analyte_name, ana_proc_id, result_unit, date) %>% 
-        summarize(result_amount = mean(result_amount, na.rm = T), 
-                  csu = mean(csu, na.rm = T), 
-                  mdc = mean(mdc, na.rm = T)) %>% 
-        ungroup()
-
-dim(beta.alldates2)
-dim(beta.alldates3)
-
 #' ## Cities with multiple monitors 
 #' We need to identify cities with multiple monitors and decide what to do.
 #' 
-#' * We drop duplicate monitors with less than 150 days of data
-#' * We plot cities with multiple monitors and check correlations
-#' * In the end, we keep city monitors with correlation > 0.6. For monitors <0.6, we drop overlapping days (to keep the most data). 
-#' 
-#' In the final dataset, for cities with >1 monitor, we take the mean by day. 
-#' 
+#' * For now, we drop duplicate monitors with less than 150 days of data
+
 #+ identify-duplicate-cities
 dup.cities <- location.list %>% group_by(city_state) %>% count() %>% filter(n > 1) %>% select(-n) %>% 
         inner_join(location.list, dup.cities, by = "city_state") %>%
@@ -221,116 +175,66 @@ dup.cities2 <- dup.cities %>%
         filter(!loc_num %in% drop.loc.num) %>% 
         filter(city_state != "AUSTIN,TX") # drop Austin because now it only has one monitor
 
-#' We pull in daily data for these cities. 
-#' We add an extra column labeling the location numbers as A, B, C etc. for conveninece. 
+beta2 <- beta %>% filter(!loc_num %in% drop.loc.num)
 
-#+ Add-location-letters
-RenameLocation <- function(df){
-        n.unique <- length(unique(df$loc_num))
-        loc_num_list <- unique(df$loc_num)
-        new_names <- paste0("loc", LETTERS[1:n.unique])
-        df2 <- df %>% mutate(loc_letter = plyr::mapvalues(df$loc_num, from = loc_num_list, to = new_names))
-        return(df2)
-}
+#' ## Drop measurements before 1987
+#' We drop all measurements taken at or before 1986, when Chernobyl happened. No major nuclear accidents have happened since them, except Fukushima
 
-dup.city.data <- beta.alldates3 %>%
-        inner_join(dup.cities2) 
+beta3 <- beta2 %>% filter(lubridate::year(collect_start) > 1986)
 
-dup.city.data <- split(dup.city.data, dup.city.data$city_state) %>% 
-        map(RenameLocation) %>% 
-        bind_rows()
+#' ## Create city list
+#' We want a list of all the cities included in our dataset, their number of days of data and their lat/long.
+#' We download lat-lon from Google. NOTE: this step used to use an API key, but Google has changed its requirements for API keys. 
+#' This code should be re-written as a loop... I just haven't throught it through yet. It sometimes fails when you knit because the later lists have no content.  
+#'
+#+ city-list, message = FALSE
+city.summary <- beta3 %>%
+        group_by(city_state, station) %>%
+        summarize(n_meas = sum(!is.na(result_amount)),
+                  obs_start = min(collect_start),
+                  obs_end =  max(collect_end)) 
 
-#' We plot the series for all cities with multiple monitors. 
+#' For now, the lat-lon download does not work and is commented out. 
+#+ get-lat-long, message = F, warning = F
+# library(ggmap)
+# latlon <- map(city.summary[["city_state"]], geocode, output = c("latlon"), source = c("google"))
+# names(latlon) <- city.summary[["city_state"]]
+# latlon <- bind_rows(latlon, .id = "city_state")
+# 
+# latlon_fail <- latlon %>% filter(is.na(lon))
+# latlon2 <- map(latlon_fail[["city_state"]], geocode, output = c("latlon"), source = c("google"))
+# names(latlon2) <- latlon_fail[["city_state"]]
+# latlon2 <- bind_rows(latlon2, .id = "city_state")
+# 
+# latlon_fail <- latlon2 %>% filter(is.na(lon))
+# latlon3 <- map(latlon_fail[["city_state"]], geocode, output = c("latlon"), source = c("google"))
+# names(latlon3) <- latlon_fail[["city_state"]]
+# latlon3 <- bind_rows(latlon3, .id = "city_state")
+# 
+# latlon_fail <- latlon3 %>% filter(is.na(lon))
+# latlon4 <- map(latlon_fail[["city_state"]], geocode, output = c("latlon"), source = c("google"))
+# names(latlon4) <- latlon_fail[["city_state"]]
+# latlon4 <- bind_rows(latlon4, .id = "city_state")
+# 
+# latlon_fail <- latlon4 %>% filter(is.na(lon))
+# latlon5 <- map(latlon_fail[["city_state"]], geocode, output = c("latlon"), source = c("google"))
+# names(latlon5) <- latlon_fail[["city_state"]]
+# latlon5 <- bind_rows(latlon5, .id = "city_state")
+# 
+# latlon_fail <- latlon5 %>% filter(is.na(lon))
+# latlon6 <- map(latlon_fail[["city_state"]], geocode, output = c("latlon"), source = c("google"))
+# names(latlon6) <- latlon_fail[["city_state"]]
+# latlon5 <- bind_rows(latlon6, .id = "city_state")
+# 
+# latlon_final <- map(list(latlon, latlon2, latlon3, latlon4, latlon5, latlon6), ~ filter(.x, !is.na(lon))) %>% 
+#         bind_rows()
+# 
+# city.summary2 <- full_join(city.summary, latlon_final, by = "city_state")
 
-#+ plot-duplicate-cities, fig.width = 10, fig.height = 10 
-plot.dups <- dup.city.data %>%
-        filter(date > "1996-01-01") %>%
-        ggplot(aes(x = date, y = result_amount, color = as.factor(loc_letter))) +
-        geom_point() +
-        scale_y_continuous(limits = c(NA, 0.06)) + 
-        facet_wrap(~ city_state, ncol = 1)
+#' ## Save Files
+#' We save the beta-data and the city-summary files.
+#' Remember that these have duplicate days! 
 
-plot.dups
-ggsave("duplicate-beta-monitors.jpg", plot = plot.dups, device = "jpeg", path = here("figures"), width = 10, height = 12)
-
-#' We also plot and save the monitors for all individual cities
-#+ plot-duplicate-cities2, warning = FALSE, fig.keep = "none"
-
-PlotCityMonitors <- function(df, name.df) {
-        plot.new()
-        plot <- df %>% 
-                ggplot(aes(x = date, y = result_amount)) +
-                geom_point() +
-                scale_y_continuous(limits = c(NA, 0.06)) + 
-                facet_wrap(~ loc_num, ncol = 1) + 
-                title(name.df)
-        
-        ggsave(paste0("duplicate-monitors-", name.df, ".jpg"), device = "jpeg", path = here("figures"), width = 10, height = 12)
-}
-
-city.list <- split(dup.city.data, dup.city.data$city_state) 
-walk2(city.list, names(city.list), PlotCityMonitors)
-
-
-#' It looks like the cities with multiple monitors are generally in agreement. How do we decide what to keep and what to drop?
-#' Maybe we check the correlations
-
-#+ check-correlations, fig.width = 8, fig.height = 12
-cor <- dup.city.data %>% 
-        select(city_state, date, result_amount, loc_letter) %>% 
-        spread(key = loc_letter, value = result_amount) 
-
-cor1 <- split(cor, cor$city_state)
-
-PlotCor <- function(df, name.df){
-        df <- df %>% select(locA:locE)
-        cor <- cor(df, use = "pairwise.complete.obs", method = "spearman")
-        cor2 <- cor[!rowSums(cor, na.rm = T)==0,!colSums(cor, na.rm = T)==0]
-        corrplot::corrplot.mixed(cor2, title = name.df, mar=c(0,0,2,0))
-        return(cor2)
-}
-
-par(mfrow = c(3, 2))
-cor2 <- map2(cor1, names(cor1), PlotCor)
-
-#' We keep all monitors with correlations greater than 0.6
-#' 
-#' * All of Oak Ridge (cor > 0.8)
-#' * Both of Jackson MS (cor = 0.68)
-#' * Both of Las Vegas (cor = 0.71) BUT WE DROP THE ONE SPIKE 
-#' * All of Welch MN (no time overlap) 
-#' 
-#' Montgomery and Phoenix are more tricky. We do the following: 
-#' 
-#' * Phoenix: drop monitor 4087 
-#' * Montgomery, AL: Keep early dates for monitor 1; middle dates for monitor 3992; final dates for monitor 3997
-
-#+ drop-dup-locations
-beta.alldates.no.montgomery <- beta.alldates3 %>% 
-        filter(!(city_state == "LAS VEGAS,NV" & loc_num == "43" & date > "2005-01-13")) %>% 
-        filter(!(city_state == "PHOENIX,AZ" & loc_num == "4087")) %>% 
-        filter(city_state != "MONTGOMERY,AL") 
-
-beta.alldates.montgomery <- beta.alldates3 %>% 
-        filter(city_state == "MONTGOMERY,AL") %>% 
-        group_by(date) %>% 
-        filter(rank(loc_num)==1) %>% 
-        mutate(year = year(date)) %>% 
-        filter(!(loc_num == 1 & year > 2010)) %>% 
-        select(-year)
-
-beta.alldates4 <- bind_rows(beta.alldates.no.montgomery, beta.alldates.montgomery) %>% 
-        group_by(city_state, city_name, state, 
-                 analyte_id, mat_id, analyte_name, ana_proc_id, result_unit, date) %>% 
-        summarize(result_amount = mean(result_amount, na.rm = T), 
-                  csu = mean(csu, na.rm = T), 
-                  mdc = mean(mdc, na.rm = T)) %>% 
-        ungroup()
-
-#' ## Save File
-#' We do some basic DQ checks and then we save. 
-
-#+ save-final-file
-beta.alldates4 %>% group_by(city_state, date) %>% count() %>% arrange(desc(n))
-write_csv(beta.alldates4, path = here("data", "Clean-RadNet-Beta.csv"))
-
+#+ save-final-files
+write_csv(beta3, path = here("data", "Clean-RadNet-Beta-byMeas.csv"))
+write_csv(city.summary2, path = here("data", "Clean-RadNet-Beta-citylist.csv"))
